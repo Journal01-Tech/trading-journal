@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indian Trading Journal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-6">
+        <!-- Header -->
+        <div class="text-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">📊 My Trading Journal</h1>
+            <p class="text-gray-600">Track your NSE & BSE trades • Build wealth systematically</p>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-xl p-4 shadow-sm border">
+                <div class="text-center">
+                    <div class="text-2xl mb-1">💰</div>
+                    <p class="text-xs text-gray-500 mb-1">Total P&L</p>
+                    <p id="totalPnL" class="text-lg font-bold text-green-600">₹0</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow-sm border">
+                <div class="text-center">
+                    <div class="text-2xl mb-1">🎯</div>
+                    <p class="text-xs text-gray-500 mb-1">Success Rate</p>
+                    <p id="winRate" class="text-lg font-bold text-blue-600">0%</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow-sm border">
+                <div class="text-center">
+                    <div class="text-2xl mb-1">📈</div>
+                    <p class="text-xs text-gray-500 mb-1">Total Trades</p>
+                    <p id="totalTrades" class="text-lg font-bold text-purple-600">0</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow-sm border">
+                <div class="text-center">
+                    <div class="text-2xl mb-1">⚡</div>
+                    <p class="text-xs text-gray-500 mb-1">Avg Per Trade</p>
+                    <p id="avgTrade" class="text-lg font-bold text-orange-600">₹0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            <!-- Add Trade Form - Left Side -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-xl p-6 shadow-sm border">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                        ➕ Add New Trade
+                    </h2>
+                    <form id="tradeForm" class="space-y-4">
+                        <!-- Broker Selection -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Select Broker</label>
+                            <select id="broker" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <option value="">Choose your broker</option>
+                                <option value="zerodha">Zerodha</option>
+                                <option value="groww">Groww</option>
+                                <option value="upstox">Upstox</option>
+                                <option value="angelone">Angel One</option>
+                                <option value="icicidirect">ICICI Direct</option>
+                                <option value="hdfcsec">HDFC Securities</option>
+                                <option value="kotaksec">Kotak Securities</option>
+                                <option value="5paisa">5paisa</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <!-- Exchange Selection -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Exchange</label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <label class="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                                    <input type="radio" name="exchange" value="NSE" class="mr-3" required>
+                                    <span class="font-medium">NSE</span>
+                                </label>
+                                <label class="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                                    <input type="radio" name="exchange" value="BSE" class="mr-3" required>
+                                    <span class="font-medium">BSE</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Stock Symbol with Search -->
+                        <div class="relative">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Stock Symbol</label>
+                            <input type="text" id="symbol" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg" placeholder="Type stock name or symbol..." required autocomplete="off">
+                            <div id="stockSuggestions" class="absolute z-10 w-full bg-white border border-gray-300 rounded-lg mt-1 max-h-48 overflow-y-auto hidden shadow-lg"></div>
+                            <p class="text-xs text-gray-500 mt-1">Search for stocks like RELIANCE, TCS, INFY...</p>
+                        </div>
+
+                        <!-- Buy/Sell and Quantity -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Action</label>
+                                <select id="tradeType" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="Buy">📈 Buy</option>
+                                    <option value="Sell">📉 Sell</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+                                <input type="number" id="quantity" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="100" required>
+                            </div>
+                        </div>
+
+                        <!-- Entry and Exit Price -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Buy Price (₹)</label>
+                                <input type="number" step="0.01" id="entryPrice" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="2500.00" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Sell Price (₹)</label>
+                                <input type="number" step="0.01" id="exitPrice" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="2600.00" required>
+                            </div>
+                        </div>
+
+                        <!-- Date -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Trade Date</label>
+                            <input type="date" id="tradeDate" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+
+                        <!-- Trade Reason -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Why did you take this trade?</label>
+                            <select id="tradeReason" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2">
+                                <option value="">Select reason</option>
+                                <option value="technical-analysis">📊 Technical Analysis</option>
+                                <option value="fundamental-analysis">📈 Fundamental Analysis</option>
+                                <option value="news-event">📰 News/Event Based</option>
+                                <option value="breakout">🚀 Breakout Trade</option>
+                                <option value="swing-trade">🔄 Swing Trade</option>
+                                <option value="momentum">⚡ Momentum Play</option>
+                                <option value="value-pick">💎 Value Pick</option>
+                                <option value="sector-play">🏭 Sector Play</option>
+                                <option value="earnings-play">💰 Earnings Play</option>
+                                <option value="other">🤔 Other</option>
+                            </select>
+                        </div>
+
+                        <!-- Additional Notes -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Additional Notes (Optional)</label>
+                            <textarea id="notes" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500" rows="2" placeholder="Any additional details about this trade..."></textarea>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-lg transition duration-200 text-lg">
+                            💾 Save Trade
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Performance and Trades - Right Side -->
+            <div class="lg:col-span-3 space-y-6">
+                <!-- Performance Chart -->
+                <div class="bg-white rounded-xl p-6 shadow-sm border">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">📊 Your Performance Journey</h2>
+                    <div class="h-64">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recent Trades -->
+                <div class="bg-white rounded-xl p-6 shadow-sm border">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">📋 Your Trades</h2>
+                    <div class="overflow-x-auto">
+                        <div id="tradesContainer">
+                            <div class="text-center py-12 text-gray-500">
+                                <div class="text-4xl mb-4">📈</div>
+                                <p class="text-lg">No trades yet!</p>
+                                <p class="text-sm">Add your first trade to start tracking your performance</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let trades = JSON.parse(localStorage.getItem('indianTrades')) || [];
+        let chart = null;
+
+        // Comprehensive Indian stocks database (NSE & BSE)
+        const indianStocks = [
+            // Nifty 50 & Large Cap
+            { symbol: 'RELIANCE', name: 'Reliance Industries Ltd' },
+            { symbol: 'TCS', name: 'Tata Consultancy Services Ltd' },
+            { symbol: 'HDFCBANK', name: 'HDFC Bank Ltd' },
+            { symbol: 'INFY', name: 'Infosys Ltd' },
+            { symbol: 'ICICIBANK', name: 'ICICI Bank Ltd' },
+            { symbol: 'HINDUNILVR', name: 'Hindustan Unilever Ltd' },
+            { symbol: 'ITC', name: 'ITC Ltd' },
+            { symbol: 'SBIN', name: 'State Bank of India' },
+            { symbol: 'BHARTIARTL', name: 'Bharti Airtel Ltd' },
+            { symbol: 'KOTAKBANK', name: 'Kotak Mahindra Bank Ltd' },
+            { symbol: 'LT', name: 'Larsen & Toubro Ltd' },
+            { symbol: 'ASIANPAINT', name: 'Asian Paints Ltd' },
+            { symbol: 'MARUTI', name: 'Maruti Suzuki India Ltd' },
+            { symbol: 'AXISBANK', name: 'Axis Bank Ltd' },
+            { symbol: 'TITAN', name: 'Titan Company Ltd' },
+            { symbol: 'SUNPHARMA', name: 'Sun Pharmaceutical Industries Ltd' },
+            { symbol: 'ULTRACEMCO', name: 'UltraTech Cement Ltd' },
+            { symbol: 'NESTLEIND', name: 'Nestle India Ltd' },
+            { symbol: 'WIPRO', name: 'Wipro Ltd' },
+            { symbol: 'HCLTECH', name: 'HCL Technologies Ltd' },
+            { symbol: 'BAJFINANCE', name: 'Bajaj Finance Ltd' },
+            { symbol: 'POWERGRID', name: 'Power Grid Corporation of India Ltd' },
+            { symbol: 'NTPC', name: 'NTPC Ltd' },
+            { symbol: 'TECHM', name: 'Tech Mahindra Ltd' },
+            { symbol: 'ONGC', name: 'Oil & Natural Gas Corporation Ltd' },
+            { symbol: 'TATAMOTORS', name: 'Tata Motors Ltd' },
+            { symbol: 'BAJAJFINSV', name: 'Bajaj Finserv Ltd' },
+            { symbol: 'DRREDDY', name: 'Dr Reddys Laboratories Ltd' },
+            { symbol: 'JSWSTEEL', name: 'JSW Steel Ltd' },
+            { symbol: 'TATASTEEL', name: 'Tata Steel Ltd' },
+            { symbol: 'ADANIPORTS', name: 'Adani Ports and Special Economic Zone Ltd' },
+            { symbol: 'CIPLA', name: 'Cipla Ltd' },
+            { symbol: 'GRASIM', name: 'Grasim Industries Ltd' },
+            { symbol: 'HINDALCO', name: 'Hindalco Industries Ltd' },
+            { symbol: 'COALINDIA', name: 'Coal India Ltd' },
+            { symbol: 'BRITANNIA', name: 'Britannia Industries Ltd' },
+            { symbol: 'DIVISLAB', name: 'Divis Laboratories Ltd' },
+            { symbol: 'EICHERMOT', name: 'Eicher Motors Ltd' },
+            { symbol: 'HEROMOTOCO', name: 'Hero MotoCorp Ltd' },
+            { symbol: 'INDUSINDBK', name: 'IndusInd Bank Ltd' },
+            { symbol: 'BAJAJ-AUTO', name: 'Bajaj Auto Ltd' },
+            { symbol: 'BPCL', name: 'Bharat Petroleum Corporation Ltd' },
+            { symbol: 'SHREECEM', name: 'Shree Cement Ltd' },
+            { symbol: 'APOLLOHOSP', name: 'Apollo Hospitals Enterprise Ltd' },
+            { symbol: 'ADANIENT', name: 'Adani Enterprises Ltd' },
+            
+            // Banking & Financial Services
+            { symbol: 'HDFCLIFE', name: 'HDFC Life Insurance Company Ltd' },
+            { symbol: 'SBILIFE', name: 'SBI Life Insurance Company Ltd' },
+            { symbol: 'ICICIPRULI', name: 'ICICI Prudential Life Insurance Company Ltd' },
+            { symbol: 'BAJAJHLDNG', name: 'Bajaj Holdings & Investment Ltd' },
+            { symbol: 'PNB', name: 'Punjab National Bank' },
+            { symbol: 'BANKBARODA', name: 'Bank of Baroda' },
+            { symbol: 'CANBK', name: 'Canara Bank' },
+            { symbol: 'UNIONBANK', name: 'Union Bank of India' },
+            { symbol: 'IDFCFIRSTB', name: 'IDFC First Bank Ltd' },
+            { symbol: 'FEDERALBNK', name: 'Federal Bank Ltd' },
+            { symbol: 'RBLBANK', name: 'RBL Bank Ltd' },
+            { symbol: 'BANDHANBNK', name: 'Bandhan Bank Ltd' },
+            { symbol: 'YESBANK', name: 'Yes Bank Ltd' },
+            { symbol: 'AUBANK', name: 'AU Small Finance Bank Ltd' },
+            { symbol: 'CHOLAFIN', name: 'Cholamandalam Investment and Finance Company Ltd' },
+            { symbol: 'M&MFIN', name: 'Mahindra & Mahindra Financial Services Ltd' },
+            { symbol: 'LICHSGFIN', name: 'LIC Housing Finance Ltd' },
+            { symbol: 'HDFCAMC', name: 'HDFC Asset Management Company Ltd' },
+            { symbol: 'MUTHOOTFIN', name: 'Muthoot Finance Ltd' },
+            { symbol: 'MANAPPURAM', name: 'Manappuram Finance Ltd' },
+            
+            // IT & Technology
+            { symbol: 'MINDTREE', name: 'Mindtree Ltd' },
+            { symbol: 'LTTS', name: 'L&T Technology Services Ltd' },
+            { symbol: 'COFORGE', name: 'Coforge Ltd' },
+            { symbol: 'MPHASIS', name: 'Mphasis Ltd' },
+            { symbol: 'PERSISTENT', name: 'Persistent Systems Ltd' },
+            { symbol: 'LTIM', name: 'LTIMindtree Ltd' },
+            { symbol: 'OFSS', name: 'Oracle Financial Services Software Ltd' },
+            { symbol: 'TATAELXSI', name: 'Tata Elxsi Ltd' },
+            { symbol: 'CYIENT', name: 'Cyient Ltd' },
+            { symbol: 'ROLTA', name: 'Rolta India Ltd' },
+            { symbol: 'KPITTECH', name: 'KPIT Technologies Ltd' },
+            { symbol: 'ZENSAR', name: 'Zensar Technologies Ltd' },
+            { symbol: 'HEXAWARE', name: 'Hexaware Technologies Ltd' },
+            { symbol: 'SONATSOFTW', name: 'Sonata Software Ltd' },
+            
+            // Pharmaceuticals & Healthcare
+            { symbol: 'LUPIN', name: 'Lupin Ltd' },
+            { symbol: 'BIOCON', name: 'Biocon Ltd' },
+            { symbol: 'AUROPHARMA', name: 'Aurobindo Pharma Ltd' },
+            { symbol: 'REDDY', name: 'Dr Reddys Laboratories Ltd' },
+            { symbol: 'CADILAHC', name: 'Cadila Healthcare Ltd' },
+            { symbol: 'TORNTPHARM', name: 'Torrent Pharmaceuticals Ltd' },
+            { symbol: 'ALKEM', name: 'Alkem Laboratories Ltd' },
+            { symbol: 'GLENMARK', name: 'Glenmark Pharmaceuticals Ltd' },
+            { symbol: 'ABBOTINDIA', name: 'Abbott India Ltd' },
+            { symbol: 'PFIZER', name: 'Pfizer Ltd' },
+            { symbol: 'GLAXO', name: 'GlaxoSmithKline Pharmaceuticals Ltd' },
+            { symbol: 'SANOFI', name: 'Sanofi India Ltd' },
+            { symbol: 'NOVARTIS', name: 'Novartis India Ltd' },
+            { symbol: 'FORTIS', name: 'Fortis Healthcare Ltd' },
+            { symbol: 'MAXHEALTH', name: 'Max Healthcare Institute Ltd' },
+            { symbol: 'NARAYANHRT', name: 'Narayana Hrudayalaya Ltd' },
+            
+            // FMCG & Consumer
+            { symbol: 'GODREJCP', name: 'Godrej Consumer Products Ltd' },
+            { symbol: 'DABUR', name: 'Dabur India Ltd' },
+            { symbol: 'MARICO', name: 'Marico Ltd' },
+            { symbol: 'COLPAL', name: 'Colgate Palmolive India Ltd' },
+            { symbol: 'EMAMILTD', name: 'Emami Ltd' },
+            { symbol: 'BAJAJCON', name: 'Bajaj Consumer Care Ltd' },
+            { symbol: 'JYOTHYLAB', name: 'Jyothy Labs Ltd' },
+            { symbol: 'GILLETTE', name: 'Gillette India Ltd' },
+            { symbol: 'PGHH', name: 'Procter & Gamble Hygiene and Health Care Ltd' },
+            { symbol: 'VBLLEISURE', name: 'VBL Leisure Ltd' },
+            { symbol: 'RADICO', name: 'Radico Khaitan Ltd' },
+            { symbol: 'UBL', name: 'United Breweries Ltd' },
+            { symbol: 'MCDOWELL-N', name: 'United Spirits Ltd' },
+            { symbol: 'JUBLFOOD', name: 'Jubilant FoodWorks Ltd' },
+            { symbol: 'WESTLIFE', name: 'Westlife Development Ltd' },
+            { symbol: 'DEVYANI', name: 'Devyani International Ltd' },
+            
+            // Automobiles
+            { symbol: 'M&M', name: 'Mahindra & Mahindra Ltd' },
+            { symbol: 'TVSMOTOR', name: 'TVS Motor Company Ltd' },
+            { symbol: 'ASHOKLEY', name: 'Ashok Leyland Ltd' },
+            { symbol: 'ESCORTS', name: 'Escorts Ltd' },
+            { symbol: 'FORCE', name: 'Force Motors Ltd' },
+            { symbol: 'BALKRISIND', name: 'Balkrishna Industries Ltd' },
+            { symbol: 'MRF', name: 'MRF Ltd' },
+            { symbol: 'APOLLOTYRE', name: 'Apollo Tyres Ltd' },
+            { symbol: 'CEAT', name: 'CEAT Ltd' },
+            { symbol: 'JK TYRE', name: 'JK Tyre & Industries Ltd' },
+            { symbol: 'MOTHERSUMI', name: 'Motherson Sumi Systems Ltd' },
+            { symbol: 'BOSCHLTD', name: 'Bosch Ltd' },
+            { symbol: 'EXIDEIND', name: 'Exide Industries Ltd' },
+            { symbol: 'AMARA RAJA', name: 'Amara Raja Batteries Ltd' },
+            
+            // Metals & Mining
+            { symbol: 'SAIL', name: 'Steel Authority of India Ltd' },
+            { symbol: 'JINDALSTEL', name: 'Jindal Steel & Power Ltd' },
+            { symbol: 'VEDL', name: 'Vedanta Ltd' },
+            { symbol: 'NMDC', name: 'NMDC Ltd' },
+            { symbol: 'MOIL', name: 'MOIL Ltd' },
+            { symbol: 'HINDZINC', name: 'Hindustan Zinc Ltd' },
+            { symbol: 'NATIONALUM', name: 'National Aluminium Company Ltd' },
+            { symbol: 'RATNAMANI', name: 'Ratnamani Metals & Tubes Ltd' },
+            { symbol: 'WELCORP', name: 'Welspun Corp Ltd' },
+            { symbol: 'WELSPUNIND', name: 'Welspun India Ltd' },
+            { symbol: 'JSWENERGY', name: 'JSW Energy Ltd' },
+            { symbol: 'JSWHLDNG', name: 'JSW Holdings Ltd' },
+            
+            // Oil & Gas
+            { symbol: 'IOC', name: 'Indian Oil Corporation Ltd' },
+            { symbol: 'HPCL', name: 'Hindustan Petroleum Corporation Ltd' },
+            { symbol: 'GAIL', name: 'GAIL India Ltd' },
+            { symbol: 'PETRONET', name: 'Petronet LNG Ltd' },
+            { symbol: 'GSPL', name: 'Gujarat State Petronet Ltd' },
+            { symbol: 'INDRAPRASTHA', name: 'Indraprastha Gas Ltd' },
+            { symbol: 'MGL', name: 'Mahanagar Gas Ltd' },
+            { symbol: 'ATGL', name: 'Adani Total Gas Ltd' },
+            { symbol: 'AEGISCHEM', name: 'Aegis Logistics Ltd' },
+            
+            // Power & Utilities
+            { symbol: 'TATAPOWER', name: 'Tata Power Company Ltd' },
+            { symbol: 'ADANIPOWER', name: 'Adani Power Ltd' },
+            { symbol: 'ADANIGREEN', name: 'Adani Green Energy Ltd' },
+            { symbol: 'RPOWER', name: 'Reliance Power Ltd' },
+            { symbol: 'TORNTPOWER', name: 'Torrent Power Ltd' },
+            { symbol: 'CESC', name: 'CESC Ltd' },
+            { symbol: 'NHPC', name: 'NHPC Ltd' },
+            { symbol: 'SJVN', name: 'SJVN Ltd' },
+            { symbol: 'THERMAX', name: 'Thermax Ltd' },
+            { symbol: 'BHEL', name: 'Bharat Heavy Electricals Ltd' },
+            
+            // Telecom
+            { symbol: 'IDEA', name: 'Vodafone Idea Ltd' },
+            { symbol: 'RCOM', name: 'Reliance Communications Ltd' },
+            { symbol: 'GTPL', name: 'GTPL Hathway Ltd' },
+            { symbol: 'HATHWAY', name: 'Hathway Cable & Datacom Ltd' },
+            { symbol: 'SITI', name: 'Siti Networks Ltd' },
+            { symbol: 'TEJAS', name: 'Tejas Networks Ltd' },
+            
+            // Cement
+            { symbol: 'ACC', name: 'ACC Ltd' },
+            { symbol: 'AMBUJCEM', name: 'Ambuja Cements Ltd' },
+            { symbol: 'JKCEMENT', name: 'JK Cement Ltd' },
+            { symbol: 'HEIDELBERG', name: 'HeidelbergCement India Ltd' },
+            { symbol: 'RAMCOCEM', name: 'Ramco Cements Ltd' },
+            { symbol: 'INDIACEM', name: 'India Cements Ltd' },
+            { symbol: 'ORIENTCEM', name: 'Orient Cement Ltd' },
+            { symbol: 'PRISMCEM', name: 'Prism Johnson Ltd' },
+            
+            // Textiles
+            { symbol: 'RAYMOND', name: 'Raymond Ltd' },
+            { symbol: 'ARVIND', name: 'Arvind Ltd' },
+            { symbol: 'VARDHMAN', name: 'Vardhman Textiles Ltd' },
+            { symbol: 'TRIDENT', name: 'Trident Ltd' },
+            { symbol: 'WELSPUNIND', name: 'Welspun India Ltd' },
+            { symbol: 'PAGEIND', name: 'Page Industries Ltd' },
+            { symbol: 'ADITYA BIRLA', name: 'Aditya Birla Fashion and Retail Ltd' },
+            { symbol: 'RTNPOWER', name: 'Rattanpower Ltd' },
+            
+            // Real Estate
+            { symbol: 'DLF', name: 'DLF Ltd' },
+            { symbol: 'GODREJPROP', name: 'Godrej Properties Ltd' },
+            { symbol: 'OBEROIRLTY', name: 'Oberoi Realty Ltd' },
+            { symbol: 'SOBHA', name: 'Sobha Ltd' },
+            { symbol: 'PRESTIGE', name: 'Prestige Estates Projects Ltd' },
+            { symbol: 'BRIGADE', name: 'Brigade Enterprises Ltd' },
+            { symbol: 'PHOENIXLTD', name: 'Phoenix Mills Ltd' },
+            { symbol: 'INDIABULLS', name: 'Indiabulls Real Estate Ltd' },
+            
+            // Media & Entertainment
+            { symbol: 'ZEEL', name: 'Zee Entertainment Enterprises Ltd' },
+            { symbol: 'SUNTV', name: 'Sun TV Network Ltd' },
+            { symbol: 'TVTODAY', name: 'TV Today Network Ltd' },
+            { symbol: 'NETWORK18', name: 'Network18 Media & Investments Ltd' },
+            { symbol: 'DISHTV', name: 'Dish TV India Ltd' },
+            { symbol: 'BALAJITELE', name: 'Balaji Telefilms Ltd' },
+            { symbol: 'EROS', name: 'Eros International Media Ltd' },
+            { symbol: 'TIPS', name: 'Tips Industries Ltd' },
+            
+            // Retail
+            { symbol: 'TRENT', name: 'Trent Ltd' },
+            { symbol: 'SHOPERSTOP', name: 'Shoppers Stop Ltd' },
+            { symbol: 'SPENCERS', name: 'Spencer\'s Retail Ltd' },
+            { symbol: 'FRETAIL', name: 'Future Retail Ltd' },
+            { symbol: 'AVENUESUPER', name: 'Avenue Supermarts Ltd' },
+            { symbol: 'RELAXO', name: 'Relaxo Footwears Ltd' },
+            { symbol: 'BATA', name: 'Bata India Ltd' },
+            
+            // Airlines & Travel
+            { symbol: 'INDIGO', name: 'InterGlobe Aviation Ltd' },
+            { symbol: 'SPICEJET', name: 'SpiceJet Ltd' },
+            { symbol: 'JETAIRWAYS', name: 'Jet Airways India Ltd' },
+            { symbol: 'IRCTC', name: 'Indian Railway Catering and Tourism Corporation Ltd' },
+            { symbol: 'THOMAS COOK', name: 'Thomas Cook India Ltd' },
+            { symbol: 'COX&KINGS', name: 'Cox & Kings Ltd' },
+            
+            // Agriculture & Fertilizers
+            { symbol: 'UPL', name: 'UPL Ltd' },
+            { symbol: 'RALLIS', name: 'Rallis India Ltd' },
+            { symbol: 'COROMANDEL', name: 'Coromandel International Ltd' },
+            { symbol: 'CHAMBLFERT', name: 'Chambal Fertilisers and Chemicals Ltd' },
+            { symbol: 'KRIBHCO', name: 'Krishak Bharati Cooperative Ltd' },
+            { symbol: 'GNFC', name: 'Gujarat Narmada Valley Fertilizers Company Ltd' },
+            { symbol: 'RCF', name: 'Rashtriya Chemicals and Fertilizers Ltd' },
+            { symbol: 'NFL', name: 'National Fertilizers Ltd' },
+            
+            // Chemicals
+            { symbol: 'PIDILITIND', name: 'Pidilite Industries Ltd' },
+            { symbol: 'AARTI', name: 'Aarti Industries Ltd' },
+            { symbol: 'ALKYLAMINE', name: 'Alkyl Amines Chemicals Ltd' },
+            { symbol: 'BALRAMCHIN', name: 'Balrampur Chini Mills Ltd' },
+            { symbol: 'DEEPAKNTR', name: 'Deepak Nitrite Ltd' },
+            { symbol: 'GHCL', name: 'GHCL Ltd' },
+            { symbol: 'GUJALKALI', name: 'Gujarat Alkalies and Chemicals Ltd' },
+            { symbol: 'HINDPETRO', name: 'Hindustan Petroleum Corporation Ltd' },
+            { symbol: 'NOCIL', name: 'NOCIL Ltd' },
+            { symbol: 'TATACHEMICAL', name: 'Tata Chemicals Ltd' },
+            { symbol: 'VINDHYATEL', name: 'Vindhya Telelinks Ltd' },
+            
+            // Infrastructure
+            { symbol: 'IRB', name: 'IRB Infrastructure Developers Ltd' },
+            { symbol: 'SADBHAV', name: 'Sadbhav Engineering Ltd' },
+            { symbol: 'HCC', name: 'Hindustan Construction Company Ltd' },
+            { symbol: 'JPASSOCIAT', name: 'Jaiprakash Associates Ltd' },
+            { symbol: 'GMRINFRA', name: 'GMR Infrastructure Ltd' },
+            { symbol: 'GVK', name: 'GVK Power & Infrastructure Ltd' },
+            { symbol: 'ISGEC', name: 'Isgec Heavy Engineering Ltd' },
+            { symbol: 'KEI', name: 'KEI Industries Ltd' },
+            { symbol: 'KALPATPOWR', name: 'Kalpataru Power Transmission Ltd' },
+            
+            // Logistics & Transportation
+            { symbol: 'CONCOR', name: 'Container Corporation of India Ltd' },
+            { symbol: 'BLUEDART', name: 'Blue Dart Express Ltd' },
+            { symbol: 'GATI', name: 'Gati Ltd' },
+            { symbol: 'MAHLOG', name: 'Mahindra Logistics Ltd' },
+            { symbol: 'TCI', name: 'Transport Corporation of India Ltd' },
+            { symbol: 'ALLCARGO', name: 'Allcargo Logistics Ltd' },
+            { symbol: 'SNOWMAN', name: 'Snowman Logistics Ltd' },
+            
+            // Miscellaneous
+            { symbol: 'DIXON', name: 'Dixon Technologies India Ltd' },
+            { symbol: 'AMBER', name: 'Amber Enterprises India Ltd' },
+            { symbol: 'CROMPTON', name: 'Crompton Greaves Consumer Electricals Ltd' },
+            { symbol: 'HAVELLS', name: 'Havells India Ltd' },
+            { symbol: 'ORIENTELEC', name: 'Orient Electric Ltd' },
+            { symbol: 'POLYCAB', name: 'Polycab India Ltd' },
+            { symbol: 'VGUARD', name: 'V-Guard Industries Ltd' },
+            { symbol: 'WHIRLPOOL', name: 'Whirlpool of India Ltd' },
+            { symbol: 'VOLTAS', name: 'Voltas Ltd' },
+            { symbol: 'BLUESTAR', name: 'Blue Star Ltd' },
+            { symbol: 'SYMPHONY', name: 'Symphony Ltd' },
+            { symbol: 'RAJESHEXPO', name: 'Rajesh Exports Ltd' },
+            { symbol: 'PCJEWELLER', name: 'PC Jeweller Ltd' },
+            { symbol: 'THANGAMAY', name: 'Thangamayil Jewellery Ltd' },
+            { symbol: 'GITANJALI', name: 'Gitanjali Gems Ltd' }
+        ];
+
+        // Broker brokerage rates (per trade)
+        const brokerageRates = {
+            'zerodha': { equity: 20, name: 'Zerodha' },
+            'groww': { equity: 20, name: 'Groww' },
+            'upstox': { equity: 20, name: 'Upstox' },
+            'angelone': { equity: 20, name: 'Angel One' },
+            'icicidirect': { equity: 0.05, name: 'ICICI Direct' }, // percentage
+            'hdfcsec': { equity: 0.05, name: 'HDFC Securities' },
+            'kotaksec': { equity: 0.05, name: 'Kotak Securities' },
+            '5paisa': { equity: 10, name: '5paisa' },
+            'other': { equity: 20, name: 'Other' }
+        };
+
+        // Set today's date as default
+        document.getElementById('tradeDate').valueAsDate = new Date();
+
+        // Stock search functionality
+        const symbolInput = document.getElementById('symbol');
+        const suggestionsDiv = document.getElementById('stockSuggestions');
+
+        symbolInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            if (query.length < 2) {
+                suggestionsDiv.classList.add('hidden');
+                return;
+            }
+
+            const matches = indianStocks.filter(stock => 
+                stock.symbol.toLowerCase().includes(query) || 
+                stock.name.toLowerCase().includes(query)
+            ).slice(0, 8);
+
+            if (matches.length > 0) {
+                suggestionsDiv.innerHTML = matches.map(stock => `
+                    <div class="p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0" onclick="selectStock('${stock.symbol}', '${stock.name}')">
+                        <div class="font-medium text-gray-800">${stock.symbol}</div>
+                        <div class="text-sm text-gray-600">${stock.name}</div>
+                    </div>
+                `).join('');
+                suggestionsDiv.classList.remove('hidden');
+            } else {
+                suggestionsDiv.classList.add('hidden');
+            }
+        });
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!symbolInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+                suggestionsDiv.classList.add('hidden');
+            }
+        });
+
+        function selectStock(symbol, name) {
+            symbolInput.value = symbol;
+            suggestionsDiv.classList.add('hidden');
+        }
+
+        // Calculate brokerage
+        function calculateBrokerage(broker, tradeValue) {
+            if (!brokerageRates[broker]) return 0;
+            
+            const rate = brokerageRates[broker].equity;
+            if (broker === 'icicidirect' || broker === 'hdfcsec' || broker === 'kotaksec') {
+                return Math.max((tradeValue * rate / 100), 20); // Minimum ₹20
+            }
+            return rate;
+        }
+
+        // Initialize chart
+        function initChart() {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Portfolio Value (₹)',
+                        data: [],
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#3B82F6',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: '#6B7280'
+                            },
+                            grid: {
+                                color: '#E5E7EB'
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                color: '#6B7280',
+                                callback: function(value) {
+                                    return '₹' + value.toLocaleString('en-IN');
+                                }
+                            },
+                            grid: {
+                                color: '#E5E7EB'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Calculate P&L for a trade
+        function calculatePnL(trade) {
+            const { quantity, entryPrice, exitPrice, broker } = trade;
+            const grossPnL = (exitPrice - entryPrice) * quantity;
+            
+            // Calculate brokerage for both buy and sell
+            const buyValue = entryPrice * quantity;
+            const sellValue = exitPrice * quantity;
+            const buyBrokerage = calculateBrokerage(broker, buyValue);
+            const sellBrokerage = calculateBrokerage(broker, sellValue);
+            const totalBrokerage = buyBrokerage + sellBrokerage;
+            
+            // Net P&L after brokerage
+            const netPnL = grossPnL - totalBrokerage;
+            return netPnL;
+        }
+
+        // Format Indian currency
+        function formatINR(amount) {
+            return '₹' + amount.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+        }
+
+        // Update statistics
+        function updateStats() {
+            const totalTrades = trades.length;
+            const totalPnL = trades.reduce((sum, trade) => sum + calculatePnL(trade), 0);
+            const winningTrades = trades.filter(trade => calculatePnL(trade) > 0).length;
+            const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
+            const avgTrade = totalTrades > 0 ? totalPnL / totalTrades : 0;
+
+            document.getElementById('totalPnL').textContent = formatINR(totalPnL);
+            document.getElementById('totalPnL').className = `text-lg font-bold ${totalPnL >= 0 ? 'text-green-600' : 'text-red-600'}`;
+            document.getElementById('winRate').textContent = winRate.toFixed(0) + '%';
+            document.getElementById('totalTrades').textContent = totalTrades;
+            document.getElementById('avgTrade').textContent = formatINR(avgTrade);
+            document.getElementById('avgTrade').className = `text-lg font-bold ${avgTrade >= 0 ? 'text-green-600' : 'text-red-600'}`;
+        }
+
+        // Update chart
+        function updateChart() {
+            if (!chart) return;
+
+            const sortedTrades = [...trades].sort((a, b) => new Date(a.tradeDate) - new Date(b.tradeDate));
+            let cumulativePnL = 0;
+            const chartData = [];
+            const chartLabels = [];
+
+            sortedTrades.forEach(trade => {
+                cumulativePnL += calculatePnL(trade);
+                chartData.push(cumulativePnL);
+                chartLabels.push(new Date(trade.tradeDate).toLocaleDateString('en-IN'));
+            });
+
+            chart.data.labels = chartLabels;
+            chart.data.datasets[0].data = chartData;
+            chart.update();
+        }
+
+        // Render trades
+        function renderTrades() {
+            const container = document.getElementById('tradesContainer');
+            
+            if (trades.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-gray-500">
+                        <div class="text-4xl mb-4">📈</div>
+                        <p class="text-lg">No trades yet!</p>
+                        <p class="text-sm">Add your first trade to start tracking your performance</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const sortedTrades = [...trades].sort((a, b) => new Date(b.tradeDate) - new Date(a.tradeDate));
+            
+            container.innerHTML = sortedTrades.map((trade, index) => {
+                const pnl = calculatePnL(trade);
+                const pnlClass = pnl >= 0 ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50';
+                const pnlIcon = pnl >= 0 ? '📈' : '📉';
+                
+                // Get trade reason display
+                const reasonOption = document.querySelector(`#tradeReason option[value="${trade.tradeReason}"]`);
+                const reasonText = reasonOption ? reasonOption.textContent : '';
+                
+                return `
+                    <div class="border border-gray-200 rounded-lg p-4 mb-3 hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center space-x-3">
+                                <div class="text-2xl">${pnlIcon}</div>
+                                <div>
+                                    <h3 class="font-bold text-lg text-gray-800">${trade.symbol}</h3>
+                                    <p class="text-sm text-gray-500">${new Date(trade.tradeDate).toLocaleDateString('en-IN')} • ${trade.exchange || 'NSE'}</p>
+                                    <p class="text-xs text-gray-400">${brokerageRates[trade.broker]?.name || trade.broker}</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="px-3 py-1 rounded-full text-sm font-medium ${pnlClass}">
+                                    ${formatINR(pnl)}
+                                </div>
+                                <button onclick="deleteTrade('${trade.id}')" class="text-xs text-red-500 hover:text-red-700 mt-1">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 text-sm text-gray-600 mb-2">
+                            <div>
+                                <span class="font-medium">Qty:</span> ${trade.quantity}
+                            </div>
+                            <div>
+                                <span class="font-medium">Buy:</span> ₹${parseFloat(trade.entryPrice).toFixed(2)}
+                            </div>
+                            <div>
+                                <span class="font-medium">Sell:</span> ₹${parseFloat(trade.exitPrice).toFixed(2)}
+                            </div>
+                        </div>
+                        ${reasonText ? `<div class="text-sm text-blue-600 mb-1">${reasonText}</div>` : ''}
+                        ${trade.notes ? `<p class="text-sm text-gray-600 italic">"${trade.notes}"</p>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Delete trade
+        function deleteTrade(tradeId) {
+            if (confirm('Delete this trade?')) {
+                trades = trades.filter(trade => trade.id !== tradeId);
+                localStorage.setItem('indianTrades', JSON.stringify(trades));
+                updateStats();
+                updateChart();
+                renderTrades();
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('tradeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const trade = {
+                symbol: document.getElementById('symbol').value.toUpperCase(),
+                tradeType: document.getElementById('tradeType').value,
+                quantity: parseInt(document.getElementById('quantity').value),
+                entryPrice: parseFloat(document.getElementById('entryPrice').value),
+                exitPrice: parseFloat(document.getElementById('exitPrice').value),
+                tradeDate: document.getElementById('tradeDate').value,
+                notes: document.getElementById('notes').value,
+                broker: document.getElementById('broker').value,
+                exchange: document.querySelector('input[name="exchange"]:checked').value,
+                tradeReason: document.getElementById('tradeReason').value,
+                id: Date.now()
+            };
+
+            trades.push(trade);
+            localStorage.setItem('indianTrades', JSON.stringify(trades));
+            
+            // Reset form
+            this.reset();
+            document.getElementById('tradeDate').valueAsDate = new Date();
+            
+            // Update UI
+            updateStats();
+            updateChart();
+            renderTrades();
+            
+            // Show success feedback
+            const button = document.querySelector('button[type="submit"]');
+            const originalText = button.textContent;
+            button.textContent = '✅ Trade Saved!';
+            button.className = 'w-full bg-green-600 text-white font-bold py-4 px-6 rounded-lg transition duration-200 text-lg';
+            
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.className = 'w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-lg transition duration-200 text-lg';
+            }, 2000);
+        });
+
+        // Initialize app
+        initChart();
+        updateStats();
+        updateChart();
+        renderTrades();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9810e3bee3275a14',t:'MTc1ODE5ODk5NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
